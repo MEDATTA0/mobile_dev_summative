@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_dev_summative/features/jobs/data/repositories/job_application_repository_impl.dart';
-import 'package:mobile_dev_summative/features/jobs/domain/entities/job_application.dart';
+import 'package:mobile_dev_summative/features/jobs/models/job_application.dart';
 import 'package:mobile_dev_summative/features/jobs/domain/repositories/job_application_repository.dart';
 
 final jobApplicationRepositoryProvider = Provider<JobApplicationRepository>((

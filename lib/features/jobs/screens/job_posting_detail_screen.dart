@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_dev_summative/features/jobs/domain/entities/job_application.dart';
-import 'package:mobile_dev_summative/features/jobs/domain/entities/job_posting.dart';
-import 'package:mobile_dev_summative/features/jobs/domain/entities/job_status.dart';
+import 'package:mobile_dev_summative/features/jobs/models/job_application.dart';
+import 'package:mobile_dev_summative/features/jobs/models/job_posting.dart';
+import 'package:mobile_dev_summative/features/jobs/models/job_status.dart';
 import 'package:mobile_dev_summative/features/jobs/jobs_providers.dart';
 import 'package:mobile_dev_summative/features/jobs/screens/widgets/job_posting_widgets.dart';
 

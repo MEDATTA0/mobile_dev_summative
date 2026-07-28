@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_dev_summative/features/jobs/domain/entities/employment_type.dart';
+import 'package:mobile_dev_summative/features/jobs/models/employment_type.dart';
 
 class CompanyAvatar extends StatelessWidget {
   const CompanyAvatar({super.key, required this.company});
