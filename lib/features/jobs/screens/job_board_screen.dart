@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_dev_summative/features/jobs/models/job_posting.dart';
 import 'package:mobile_dev_summative/features/jobs/job_postings_providers.dart';
 import 'package:mobile_dev_summative/features/jobs/screens/job_posting_detail_screen.dart';
+import 'package:mobile_dev_summative/features/jobs/screens/job_posting_form_screen.dart';
 import 'package:mobile_dev_summative/features/jobs/screens/widgets/job_posting_widgets.dart';
 
 class JobBoardScreen extends ConsumerStatefulWidget {
@@ -36,6 +37,17 @@ class _JobBoardScreenState extends ConsumerState<JobBoardScreen> {
     final postingsAsync = ref.watch(jobPostingsProvider);
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const JobPostingFormScreen(),
+            ),
+          );
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('New posting'),
+      ),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
