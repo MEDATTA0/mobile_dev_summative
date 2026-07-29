@@ -2,7 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:mobile_dev_summative/core/navigation/main_shell.dart';
+import 'package:mobile_dev_summative/core/navigation/auth_gate.dart';
 import 'package:mobile_dev_summative/core/theme/app_theme.dart';
 import 'package:mobile_dev_summative/firebase_options.dart';
 
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system,
-      home: const MainShell(),
+      home: const AuthGate(),
     );
   }
 }
