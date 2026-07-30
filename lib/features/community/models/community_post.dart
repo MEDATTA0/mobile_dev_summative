@@ -5,6 +5,7 @@ class CommunityPost extends BaseModel {
   final String authorName;
   final String title;
   final String body;
+  final String tag;
 
   CommunityPost({
     required super.id,
@@ -14,11 +15,17 @@ class CommunityPost extends BaseModel {
     required this.authorName,
     required this.title,
     required this.body,
+    required this.tag,
   });
 
   bool get isEdited => updatedAt.isAfter(createdAt);
 
-  CommunityPost copyWith({String? title, String? body, DateTime? updatedAt}) {
+  CommunityPost copyWith({
+    String? title,
+    String? body,
+    String? tag,
+    DateTime? updatedAt,
+  }) {
     return CommunityPost(
       id: id,
       createdAt: createdAt,
@@ -27,6 +34,7 @@ class CommunityPost extends BaseModel {
       authorName: authorName,
       title: title ?? this.title,
       body: body ?? this.body,
+      tag: tag ?? this.tag,
     );
   }
 
@@ -39,6 +47,7 @@ class CommunityPost extends BaseModel {
       authorName: map["authorName"],
       title: map["title"],
       body: map["body"],
+      tag: map["tag"],
     );
   }
 
@@ -52,6 +61,7 @@ class CommunityPost extends BaseModel {
       "authorName": authorName,
       "title": title,
       "body": body,
+      "tag": tag,
     };
   }
 }
