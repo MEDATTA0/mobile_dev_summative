@@ -3,10 +3,12 @@ import 'package:mobile_dev_summative/features/projects/models/enrollment_status.
 
 class Enrollment extends BaseModel {
   final String projectId;
+  final String projectTitle;
   final String userId;
   final EnrollmentStatus status;
   final int completedSteps;
   final int totalSteps;
+  final String? submissionUrl;
   final DateTime enrolledAt;
 
   Enrollment({
@@ -14,10 +16,12 @@ class Enrollment extends BaseModel {
     required super.createdAt,
     required super.updatedAt,
     required this.projectId,
+    required this.projectTitle,
     required this.userId,
     required this.status,
     required this.completedSteps,
     required this.totalSteps,
+    this.submissionUrl,
     required this.enrolledAt,
   });
 
@@ -29,11 +33,13 @@ class Enrollment extends BaseModel {
       createdAt: DateTime.parse(map["createdAt"]),
       updatedAt: DateTime.parse(map["updatedAt"]),
       projectId: map["projectId"],
+      projectTitle: map["projectTitle"] ?? "",
       userId: map["userId"],
       status: EnrollmentStatus.values.byName(map["status"]),
       completedSteps: map["completedSteps"] ?? 0,
       totalSteps: map["totalSteps"] ?? 0,
       enrolledAt: DateTime.parse(map["enrolledAt"]),
+      submissionUrl: map["submissionUrl"],
     );
   }
 
@@ -44,10 +50,12 @@ class Enrollment extends BaseModel {
       "createdAt": createdAt.toIso8601String(),
       "updatedAt": updatedAt.toIso8601String(),
       "projectId": projectId,
+      "projectTitle": projectTitle,
       "userId": userId,
       "status": status.name,
       "completedSteps": completedSteps,
       "totalSteps": totalSteps,
+      "submissionUrl": submissionUrl,
       "enrolledAt": enrolledAt.toIso8601String(),
     };
   }

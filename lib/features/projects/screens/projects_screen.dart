@@ -1,53 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile_dev_summative/features/projects/models/project.dart';
 import 'package:mobile_dev_summative/features/projects/models/project_level.dart';
+import 'package:mobile_dev_summative/features/projects/projects_providers.dart';
 import 'package:mobile_dev_summative/features/projects/screens/project_detail_screen.dart';
 import 'package:mobile_dev_summative/features/projects/screens/widgets/project_widgets.dart';
 
-class ProjectsScreen extends StatefulWidget {
+class ProjectsScreen extends ConsumerStatefulWidget {
   const ProjectsScreen({super.key});
 
   @override
-  State<ProjectsScreen> createState() => _ProjectsScreenState();
+  ConsumerState<ProjectsScreen> createState() => _ProjectsScreenState();
 }
 
-class _ProjectsScreenState extends State<ProjectsScreen> {
+class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
   ProjectLevel? _selectedLevel; // null == All
-
-  static const _sampleProjects = <_SampleProject>[
-    _SampleProject(
-      title: 'Build your first Doctype',
-      subtitle: 'Frappe Framework basics',
-      level: ProjectLevel.beginner,
-      status: 'In progress',
-    ),
-    _SampleProject(
-      title: 'ERPNext Sales Module',
-      subtitle: 'Quotations, sales orders, invoices',
-      level: ProjectLevel.beginner,
-      status: 'Not started',
-    ),
-    _SampleProject(
-      title: 'Custom Client Scripts',
-      subtitle: 'Automate forms with client-side logic',
-      level: ProjectLevel.intermediate,
-      status: 'Not started',
-    ),
-    _SampleProject(
-      title: 'Workflow Automation',
-      subtitle: 'Approval flows and server scripts',
-      level: ProjectLevel.intermediate,
-      status: 'Locked',
-    ),
-  ];
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final filtered = _selectedLevel == null
-        ? _sampleProjects
-        : _sampleProjects
-              .where((project) => project.level == _selectedLevel)
-              .toList();
+    final projectsAsync = ref.watch(projectsProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -64,9 +36,31 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             ),
             const SizedBox(height: 12),
             Expanded(
-              child: filtered.isEmpty
-                  ? const Center(child: Text('No projects at this level yet'))
-                  : ListView.separated(
+              child: projectsAsync.when(
+                data: (projects) {
+                  if (projects.isEmpty) {
+                    return _RetryView(
+                      message: 'No projects yet',
+                      onRetry: () => ref.invalidate(projectsProvider),
+                    );
+                  }
+
+                  final filtered = _selectedLevel == null
+                      ? projects
+                      : projects
+                            .where((project) => project.level == _selectedLevel)
+                            .toList();
+
+                  if (filtered.isEmpty) {
+                    return const Center(
+                      child: Text('No projects at this level yet'),
+                    );
+                  }
+
+                  return RefreshIndicator(
+                    onRefresh: () => ref.refresh(projectsProvider.future),
+                    child: ListView.separated(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                       itemCount: filtered.length,
                       separatorBuilder: (context, index) =>
@@ -75,6 +69,15 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                         return _ProjectCard(project: filtered[index]);
                       },
                     ),
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stackTrace) => _RetryView(
+                  message: 'Failed to load projects',
+                  detail: '$error',
+                  onRetry: () => ref.invalidate(projectsProvider),
+                ),
+              ),
             ),
           ],
         ),
@@ -140,123 +143,96 @@ class _FilterChip extends StatelessWidget {
 class _ProjectCard extends StatelessWidget {
   const _ProjectCard({required this.project});
 
-  final _SampleProject project;
+  final Project project;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final isLocked = project.status == 'Locked';
 
     return InkWell(
       borderRadius: BorderRadius.circular(16),
-      onTap: isLocked
-          ? null
-          : () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => ProjectDetailScreen(
-                    title: project.title,
-                    subtitle: project.subtitle,
-                    level: project.level,
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => ProjectDetailScreen(project: project),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const ProjectIcon(),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(project.title, style: textTheme.titleMedium),
+                      const SizedBox(height: 2),
+                      Text(
+                        project.subtitle,
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              );
-            },
-      child: Opacity(
-        opacity: isLocked ? 0.5 : 1,
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const ProjectIcon(),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(project.title, style: textTheme.titleMedium),
-                        const SizedBox(height: 2),
-                        Text(
-                          project.subtitle,
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  ProjectLevelBadge(level: project.level),
-                  const Spacer(),
-                  _StatusLabel(status: project.status),
-                ],
-              ),
-            ],
-          ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ProjectLevelBadge(level: project.level),
+          ],
         ),
       ),
     );
   }
 }
 
-class _StatusLabel extends StatelessWidget {
-  const _StatusLabel({required this.status});
+class _RetryView extends StatelessWidget {
+  const _RetryView({required this.message, this.detail, required this.onRetry});
 
-  final String status;
+  final String message;
+  final String? detail;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
-    final (icon, color) = switch (status) {
-      'In progress' => (Icons.play_circle_outline, Colors.indigo),
-      'Locked' => (Icons.lock_outline, Colors.grey),
-      _ => (Icons.circle_outlined, Colors.grey),
-    };
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 16, color: color),
-        const SizedBox(width: 4),
-        Text(
-          status,
-          style: TextStyle(
-            color: color,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(message, style: Theme.of(context).textTheme.titleMedium),
+          if (detail != null) ...[
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Text(
+                detail!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          OutlinedButton(onPressed: onRetry, child: const Text('Retry')),
+        ],
+      ),
     );
   }
-}
-
-class _SampleProject {
-  const _SampleProject({
-    required this.title,
-    required this.subtitle,
-    required this.level,
-    required this.status,
-  });
-
-  final String title;
-  final String subtitle;
-  final ProjectLevel level;
-  final String status;
 }
