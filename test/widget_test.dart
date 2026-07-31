@@ -44,6 +44,7 @@ class FakePostReplyRepository implements PostReplyRepository {
 
   @override
   Future<void> deleteReply(String id) async {}
+}
 
 class FakeUser extends Fake implements User {
   @override
