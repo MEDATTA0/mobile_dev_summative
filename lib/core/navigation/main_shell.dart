@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_dev_summative/features/community/screens/community_screen.dart';
 import 'package:mobile_dev_summative/features/home/screens/home_screen.dart';
 import 'package:mobile_dev_summative/features/jobs/screens/job_board_screen.dart';
+import 'package:mobile_dev_summative/features/profile/presentation/screens/profile_screen.dart';
 import 'package:mobile_dev_summative/features/projects/screens/projects_screen.dart';
 
 class MainShell extends StatefulWidget {
@@ -19,6 +20,7 @@ class _MainShellState extends State<MainShell> {
     ProjectsScreen(),
     CommunityScreen(),
     JobBoardScreen(),
+    ProfileScreen(),
   ];
 
   @override
@@ -50,6 +52,11 @@ class _MainShellState extends State<MainShell> {
             icon: Icon(Icons.work_outline),
             selectedIcon: Icon(Icons.work),
             label: 'Jobs',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Profile',
           ),
         ],
       ),
