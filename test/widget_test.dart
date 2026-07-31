@@ -1,7 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mobile_dev_summative/core/preferences/app_preferences.dart';
+import 'package:mobile_dev_summative/core/preferences/preferences_providers.dart';
 import 'package:mobile_dev_summative/core/repositories/auth_repository.dart';
+import 'package:mobile_dev_summative/features/profile/profile_providers.dart';
 import 'package:mobile_dev_summative/features/jobs/models/job_application.dart';
 import 'package:mobile_dev_summative/features/jobs/models/job_posting.dart';
 import 'package:mobile_dev_summative/features/jobs/models/job_status.dart';
@@ -9,13 +12,11 @@ import 'package:mobile_dev_summative/features/jobs/domain/repositories/job_appli
 import 'package:mobile_dev_summative/features/jobs/domain/repositories/job_posting_repository.dart';
 import 'package:mobile_dev_summative/features/jobs/job_postings_providers.dart';
 import 'package:mobile_dev_summative/features/jobs/jobs_providers.dart';
-
 import 'package:mobile_dev_summative/features/community/community_providers.dart';
 import 'package:mobile_dev_summative/features/community/domain/repositories/community_post_repository.dart';
 import 'package:mobile_dev_summative/features/community/domain/repositories/post_reply_repository.dart';
 import 'package:mobile_dev_summative/features/community/models/community_post.dart';
 import 'package:mobile_dev_summative/features/community/models/post_reply.dart';
-
 import 'package:mobile_dev_summative/main.dart';
 
 class FakeCommunityPostRepository implements CommunityPostRepository {
@@ -44,6 +45,7 @@ class FakePostReplyRepository implements PostReplyRepository {
 
   @override
   Future<void> deleteReply(String id) async {}
+}
 
 class FakeUser extends Fake implements User {
   @override
@@ -82,6 +84,13 @@ class FakeJobPostingRepository implements JobPostingRepository {
   Future<JobPosting?> getById(String id) async => null;
 }
 
+/// Skips onboarding so the test lands directly on the main shell.
+class _SeenPrefsController extends PreferencesController {
+  @override
+  Future<AppPreferences> build() async =>
+      const AppPreferences(onboardingSeen: true);
+}
+
 void main() {
   testWidgets('shows the empty state when there are no job postings', (
     WidgetTester tester,
@@ -89,9 +98,11 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          preferencesControllerProvider.overrideWith(_SeenPrefsController.new),
           authStateChangesProvider.overrideWith(
             (ref) => Stream.value(FakeUser()),
           ),
+          currentProfileProvider.overrideWith((ref) => Stream.value(null)),
           jobApplicationRepositoryProvider.overrideWithValue(
             FakeJobApplicationRepository(),
           ),
