@@ -22,7 +22,9 @@ class MyApp extends StatelessWidget {
       title: 'Job Tracker',
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system,
+      // TODO(habeeb): drive this from the persisted theme preference (Day 4
+      // SharedPrefs task) once it lands; default to light to match Figma.
+      themeMode: ThemeMode.light,
       home: const MainShell(),
     );
   }
