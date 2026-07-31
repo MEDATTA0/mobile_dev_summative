@@ -8,10 +8,20 @@ class AppTheme {
   static ThemeData get dark => _buildTheme(Brightness.dark);
 
   static ThemeData _buildTheme(Brightness brightness) {
+    final isLight = brightness == Brightness.light;
+
+    // Seed for M3 harmony, then pin the exact brand colors from the design.
     final colorScheme = ColorScheme.fromSeed(
       seedColor: AppColors.primary,
       brightness: brightness,
-    ).copyWith(secondary: AppColors.secondary);
+    ).copyWith(
+      primary: AppColors.primary,
+      onPrimary: Colors.white,
+      primaryContainer: AppColors.primaryLight,
+      onPrimaryContainer: AppColors.primaryDark,
+      secondary: AppColors.secondary,
+      onSecondary: Colors.white,
+    );
 
     final base = ThemeData(colorScheme: colorScheme, useMaterial3: true);
 
