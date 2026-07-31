@@ -22,12 +22,37 @@ class _ProjectSandboxScreenState extends ConsumerState<ProjectSandboxScreen> {
   int _currentStep = 0;
   final _linkController = TextEditingController();
   final Set<int> _confirmedSteps = {};
+  bool _loadingProgress = true;
 
   List<ProjectStep> get _steps => widget.project.steps;
 
   bool get _isLastStep => _currentStep == _steps.length - 1;
 
   bool get _currentStepConfirmed => _confirmedSteps.contains(_currentStep);
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreProgress();
+  }
+
+  // Reopening the sandbox previously always started at step 0 with nothing
+  // confirmed, discarding whatever was already saved on the enrollment.
+  Future<void> _restoreProgress() async {
+    final enrollment = await ref
+        .read(enrollmentRepositoryProvider)
+        .getById(widget.enrollmentId);
+    if (!mounted) return;
+
+    final completed = (enrollment?.completedSteps ?? 0).clamp(0, _steps.length);
+    setState(() {
+      _confirmedSteps.addAll(List.generate(completed, (i) => i));
+      _currentStep = completed >= _steps.length
+          ? (_steps.isEmpty ? 0 : _steps.length - 1)
+          : completed;
+      _loadingProgress = false;
+    });
+  }
 
   Future<void> _saveProgress(int completedSteps) async {
     final messenger = ScaffoldMessenger.of(context);
@@ -48,7 +73,8 @@ class _ProjectSandboxScreenState extends ConsumerState<ProjectSandboxScreen> {
     setState(() => _currentStep += 1);
     _saveProgress(_confirmedSteps.length);
   }
-Future<void> _onSubmit() async {
+
+  Future<void> _onSubmit() async {
     await _saveProgress(_steps.length);
 
     if (!mounted) return;
@@ -104,9 +130,7 @@ Future<void> _onSubmit() async {
       _showSuccess();
     } catch (e) {
       if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(content: Text('Failed to submit: $e')),
-      );
+      messenger.showSnackBar(SnackBar(content: Text('Failed to submit: $e')));
     }
   }
 
@@ -142,67 +166,69 @@ Future<void> _onSubmit() async {
     return Scaffold(
       appBar: AppBar(title: Text(widget.project.title)),
       body: SafeArea(
-        child: Stepper(
-          currentStep: _currentStep,
-          onStepTapped: (step) => setState(() => _currentStep = step),
-          onStepContinue: !_currentStepConfirmed
-              ? null
-              : (_isLastStep ? _onSubmit : _onContinue),
-          onStepCancel: _currentStep == 0
-              ? null
-              : () => setState(() => _currentStep -= 1),
-          controlsBuilder: (context, details) {
-            return Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Row(
-                children: [
-                  FilledButton(
-                    onPressed: details.onStepContinue,
-                    child: Text(_isLastStep ? 'Submit project' : 'Next'),
-                  ),
-                  const SizedBox(width: 8),
-                  if (_currentStep > 0)
-                    TextButton(
-                      onPressed: details.onStepCancel,
-                      child: const Text('Back'),
+        child: _loadingProgress
+            ? const Center(child: CircularProgressIndicator())
+            : Stepper(
+                currentStep: _currentStep,
+                onStepTapped: (step) => setState(() => _currentStep = step),
+                onStepContinue: !_currentStepConfirmed
+                    ? null
+                    : (_isLastStep ? _onSubmit : _onContinue),
+                onStepCancel: _currentStep == 0
+                    ? null
+                    : () => setState(() => _currentStep -= 1),
+                controlsBuilder: (context, details) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Row(
+                      children: [
+                        FilledButton(
+                          onPressed: details.onStepContinue,
+                          child: Text(_isLastStep ? 'Submit project' : 'Next'),
+                        ),
+                        const SizedBox(width: 8),
+                        if (_currentStep > 0)
+                          TextButton(
+                            onPressed: details.onStepCancel,
+                            child: const Text('Back'),
+                          ),
+                      ],
+                    ),
+                  );
+                },
+                steps: [
+                  for (var i = 0; i < _steps.length; i++)
+                    Step(
+                      title: Text(_steps[i].title),
+                      content: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(_steps[i].detail),
+                          ),
+                          const SizedBox(height: 8),
+                          CheckboxListTile(
+                            contentPadding: EdgeInsets.zero,
+                            controlAffinity: ListTileControlAffinity.leading,
+                            title: const Text('I completed this step'),
+                            value: _confirmedSteps.contains(i),
+                            onChanged: (checked) {
+                              setState(() {
+                                if (checked == true) {
+                                  _confirmedSteps.add(i);
+                                } else {
+                                  _confirmedSteps.remove(i);
+                                }
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                      isActive: i <= _currentStep,
                     ),
                 ],
               ),
-            );
-          },
-          steps: [
-            for (var i = 0; i < _steps.length; i++)
-              Step(
-                title: Text(_steps[i].title),
-                content: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(_steps[i].detail),
-                    ),
-                    const SizedBox(height: 8),
-                    CheckboxListTile(
-                      contentPadding: EdgeInsets.zero,
-                      controlAffinity: ListTileControlAffinity.leading,
-                      title: const Text('I completed this step'),
-                      value: _confirmedSteps.contains(i),
-                      onChanged: (checked) {
-                        setState(() {
-                          if (checked == true) {
-                            _confirmedSteps.add(i);
-                          } else {
-                            _confirmedSteps.remove(i);
-                          }
-                        });
-                      },
-                    ),
-                  ],
-                ),
-                isActive: i <= _currentStep,
-              ),
-          ],
-        ),
       ),
     );
   }
