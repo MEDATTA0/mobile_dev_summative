@@ -58,6 +58,7 @@ class EnrollmentRepositoryImpl extends BaseRepository<Enrollment>
       createdAt: current.createdAt,
       updatedAt: DateTime.now(),
       projectId: current.projectId,
+      projectTitle: current.projectTitle,
       userId: current.userId,
       status: status ?? current.status,
       completedSteps: completedSteps ?? current.completedSteps,
