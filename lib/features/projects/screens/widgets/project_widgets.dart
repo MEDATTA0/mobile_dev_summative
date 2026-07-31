@@ -97,6 +97,43 @@ class ProjectProgressBar extends StatelessWidget {
   }
 }
 
+class ProjectStatusLine extends StatelessWidget {
+  const ProjectStatusLine({super.key, this.status, this.locked = false});
+
+  final EnrollmentStatus? status;
+  final bool locked;
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, color) = locked
+        ? ('Locked', Colors.grey.shade500)
+        : switch (status) {
+            null || EnrollmentStatus.notStarted => (
+              'Not started',
+              Colors.grey.shade600,
+            ),
+            EnrollmentStatus.inProgress => (
+              'In progress',
+              Colors.deepOrange.shade400,
+            ),
+            EnrollmentStatus.submitted => (
+              'Submitted',
+              Colors.indigo.shade400,
+            ),
+            EnrollmentStatus.completed => ('Completed', Colors.green.shade600),
+          };
+
+    return Text(
+      label,
+      style: TextStyle(
+        color: color,
+        fontWeight: FontWeight.w500,
+        fontSize: 13,
+      ),
+    );
+  }
+}
+
 class EnrollmentStatusBadge extends StatelessWidget {
   const EnrollmentStatusBadge({super.key, required this.status});
 
