@@ -8,6 +8,7 @@ class Enrollment extends BaseModel {
   final EnrollmentStatus status;
   final int completedSteps;
   final int totalSteps;
+  final String? submissionUrl;
   final DateTime enrolledAt;
 
   Enrollment({
@@ -20,6 +21,7 @@ class Enrollment extends BaseModel {
     required this.status,
     required this.completedSteps,
     required this.totalSteps,
+    this.submissionUrl,
     required this.enrolledAt,
   });
 
@@ -37,6 +39,7 @@ class Enrollment extends BaseModel {
       completedSteps: map["completedSteps"] ?? 0,
       totalSteps: map["totalSteps"] ?? 0,
       enrolledAt: DateTime.parse(map["enrolledAt"]),
+      submissionUrl: map["submissionUrl"],
     );
   }
 
@@ -52,6 +55,7 @@ class Enrollment extends BaseModel {
       "status": status.name,
       "completedSteps": completedSteps,
       "totalSteps": totalSteps,
+      "submissionUrl": submissionUrl,
       "enrolledAt": enrolledAt.toIso8601String(),
     };
   }
