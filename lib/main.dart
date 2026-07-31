@@ -2,7 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:mobile_dev_summative/core/navigation/main_shell.dart';
+import 'package:mobile_dev_summative/core/navigation/auth_gate.dart';
 import 'package:mobile_dev_summative/core/preferences/app_preferences.dart';
 import 'package:mobile_dev_summative/core/preferences/preferences_providers.dart';
 import 'package:mobile_dev_summative/core/theme/app_theme.dart';
@@ -36,7 +36,8 @@ class MyApp extends ConsumerWidget {
           child: child!,
         );
       },
-      home: prefs.onboardingSeen ? const MainShell() : const OnboardingScreen(),
+      // Onboarding first, then auth decides AuthScreen vs MainShell.
+      home: prefs.onboardingSeen ? const AuthGate() : const OnboardingScreen(),
     );
   }
 }
