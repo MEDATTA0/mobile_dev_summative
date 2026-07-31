@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile_dev_summative/features/projects/enrollments_providers.dart';
 import 'package:mobile_dev_summative/features/projects/models/project.dart';
 
 class ProjectSandboxScreen extends ConsumerStatefulWidget {
@@ -24,7 +25,29 @@ class _ProjectSandboxScreenState extends ConsumerState<ProjectSandboxScreen> {
 
   bool get _isLastStep => _currentStep == _steps.length - 1;
 
-  void _onSubmit() {
+  Future<void> _saveProgress(int completedSteps) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref
+          .read(enrollmentRepositoryProvider)
+          .updateProgress(widget.enrollmentId, completedSteps);
+      ref.invalidate(enrollmentsProvider);
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text('Could not save progress: $e')),
+      );
+    }
+  }
+
+  void _onContinue() {
+    setState(() => _currentStep += 1);
+    _saveProgress(_currentStep);
+  }
+
+  Future<void> _onSubmit() async {
+    await _saveProgress(_steps.length);
+    if (!mounted) return;
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
@@ -59,9 +82,7 @@ class _ProjectSandboxScreenState extends ConsumerState<ProjectSandboxScreen> {
         child: Stepper(
           currentStep: _currentStep,
           onStepTapped: (step) => setState(() => _currentStep = step),
-          onStepContinue: _isLastStep
-              ? _onSubmit
-              : () => setState(() => _currentStep += 1),
+          onStepContinue: _isLastStep ? _onSubmit : _onContinue,
           onStepCancel: _currentStep == 0
               ? null
               : () => setState(() => _currentStep -= 1),
