@@ -2,6 +2,7 @@ import 'package:mobile_dev_summative/core/repositories/base_repository.dart';
 import 'package:mobile_dev_summative/features/projects/domain/repositories/enrollment_repository.dart';
 import 'package:mobile_dev_summative/features/projects/models/enrollment.dart';
 import 'package:mobile_dev_summative/features/projects/models/enrollment_status.dart';
+import 'package:mobile_dev_summative/features/projects/domain/enrollment_progress.dart';
 
 class EnrollmentRepositoryImpl extends BaseRepository<Enrollment>
     implements EnrollmentRepository {
@@ -23,9 +24,7 @@ class EnrollmentRepositoryImpl extends BaseRepository<Enrollment>
     if (current == null) {
       throw StateError('Enrollment $id not found');
     }
-    final status = completedSteps >= current.totalSteps
-        ? EnrollmentStatus.submitted
-        : EnrollmentStatus.inProgress;
+    final status = enrollmentStatusForProgress(completedSteps, current.totalSteps);
     await update(_copyWith(current, completedSteps: completedSteps, status: status));
   }
 
