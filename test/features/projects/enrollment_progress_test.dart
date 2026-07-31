@@ -11,6 +11,7 @@ Enrollment _enrollment({required int completed, required int total}) {
     updatedAt: now,
     projectId: 'p1',
     userId: 'u1',
+    projectTitle: 'Test project',
     status: EnrollmentStatus.inProgress,
     completedSteps: completed,
     totalSteps: total,

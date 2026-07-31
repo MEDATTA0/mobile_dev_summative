@@ -16,6 +16,7 @@ class EnrollInProject {
       updatedAt: now,
       projectId: project.id,
       userId: userId,
+      projectTitle: project.title,
       status: EnrollmentStatus.inProgress,
       completedSteps: 0,
       totalSteps: project.steps.length,

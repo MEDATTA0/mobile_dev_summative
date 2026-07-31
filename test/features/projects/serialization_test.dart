@@ -41,6 +41,7 @@ void main() {
       projectId: 'p1',
       userId: 'u1',
       status: EnrollmentStatus.submitted,
+      projectTitle: 'Build your first Doctype',
       completedSteps: 3,
       totalSteps: 4,
       enrolledAt: now,
