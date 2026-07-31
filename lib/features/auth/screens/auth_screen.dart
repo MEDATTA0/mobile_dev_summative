@@ -27,6 +27,20 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     super.dispose();
   }
 
+  String? _validateEmail(String? value) {
+    final text = value?.trim() ?? '';
+    if (text.isEmpty) return 'Email is required';
+    final pattern = RegExp(r'^[\w.\-]+@([\w\-]+\.)+[\w\-]{2,}$');
+    return pattern.hasMatch(text) ? null : 'Enter a valid email';
+  }
+
+  String? _validatePassword(String? value) {
+    final text = value ?? '';
+    if (text.isEmpty) return 'Password is required';
+    if (text.length < 6) return 'Use at least 6 characters';
+    return null;
+  }
+
   String? _required(String? value) {
     if (value == null || value.trim().isEmpty) return 'Required';
     return null;
@@ -63,16 +77,24 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     controller: _emailController,
                     decoration: const InputDecoration(labelText: 'Email'),
                     keyboardType: TextInputType.emailAddress,
-                    validator: _required,
+                    validator: _validateEmail,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _passwordController,
                     decoration: const InputDecoration(labelText: 'Password'),
                     obscureText: true,
-                    validator: _required,
+                    validator: _validatePassword,
                   ),
-                  const SizedBox(height: 24),
+                  if (!_isSignUp)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: _submitting ? null : _forgotPassword,
+                        child: const Text('Forgot password?'),
+                      ),
+                    ),
+                  const SizedBox(height: 16),
                   FilledButton(
                     onPressed: _submitting ? null : _submit,
                     child: _submitting
@@ -82,6 +104,29 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : Text(_isSignUp ? 'Create account' : 'Sign in'),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      const Expanded(child: Divider()),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          'or',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                      const Expanded(child: Divider()),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    onPressed: _submitting ? null : _signInWithGoogle,
+                    icon: const Icon(Icons.g_mobiledata, size: 28),
+                    label: const Text('Continue with Google'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
                   ),
                   const SizedBox(height: 8),
                   TextButton(
@@ -129,6 +174,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 email: email,
               ),
             );
+        messenger.showSnackBar(
+          SnackBar(content: Text('Verification email sent to $email')),
+        );
       } else {
         await ref
             .read(authRepositoryProvider)
@@ -141,6 +189,65 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       if (mounted) {
         setState(() => _submitting = false);
       }
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() => _submitting = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final credential = await ref
+          .read(authRepositoryProvider)
+          .signInWithGoogle();
+      if (credential == null) return; // user cancelled
+
+      if (credential.additionalUserInfo?.isNewUser ?? false) {
+        final user = credential.user!;
+        final now = DateTime.now();
+        await ref
+            .read(userRepositoryProvider)
+            .createWithId(
+              user.uid,
+              UserModel(
+                id: user.uid,
+                createdAt: now,
+                updatedAt: now,
+                name:
+                    user.displayName ??
+                    user.email?.split('@').first ??
+                    'User',
+                email: user.email ?? '',
+              ),
+            );
+      }
+    } catch (e) {
+      if (!context.mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text('$e')));
+    } finally {
+      if (mounted) {
+        setState(() => _submitting = false);
+      }
+    }
+  }
+
+  Future<void> _forgotPassword() async {
+    final email = _emailController.text.trim();
+    final messenger = ScaffoldMessenger.of(context);
+    if (_validateEmail(email) != null) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Enter a valid email above first')),
+      );
+      return;
+    }
+    try {
+      await ref.read(authRepositoryProvider).sendPasswordResetEmail(email);
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text('Password reset email sent to $email')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text('$e')));
     }
   }
 }
