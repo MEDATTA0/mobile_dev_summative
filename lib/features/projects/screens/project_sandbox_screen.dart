@@ -20,6 +20,7 @@ class ProjectSandboxScreen extends ConsumerStatefulWidget {
 
 class _ProjectSandboxScreenState extends ConsumerState<ProjectSandboxScreen> {
   int _currentStep = 0;
+  final _linkController = TextEditingController();
 
   List<ProjectStep> get _steps => widget.project.steps;
 
@@ -45,9 +46,69 @@ class _ProjectSandboxScreenState extends ConsumerState<ProjectSandboxScreen> {
     _saveProgress(_currentStep);
   }
 
-  Future<void> _onSubmit() async {
+Future<void> _onSubmit() async {
     await _saveProgress(_steps.length);
+
     if (!mounted) return;
+    final link = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Submit your work'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Paste a link to your work (a screenshot, your Frappe site, '
+                'or a shared doc) so it can be reviewed.',
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _linkController,
+                decoration: const InputDecoration(
+                  hintText: 'https://...',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.url,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () =>
+                  Navigator.of(context).pop(_linkController.text.trim()),
+              child: const Text('Submit'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (link == null || link.isEmpty) return;
+    if (!mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref
+          .read(enrollmentRepositoryProvider)
+          .submitWork(widget.enrollmentId, link);
+      ref.invalidate(enrollmentsProvider);
+      if (!mounted) return;
+      _showSuccess();
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text('Failed to submit: $e')),
+      );
+    }
+  }
+
+  void _showSuccess() {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
