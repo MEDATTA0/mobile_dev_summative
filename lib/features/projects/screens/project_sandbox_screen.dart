@@ -43,9 +43,8 @@ class _ProjectSandboxScreenState extends ConsumerState<ProjectSandboxScreen> {
 
   void _onContinue() {
     setState(() => _currentStep += 1);
-    _saveProgress(_currentStep);
+    _saveProgress(_confirmedSteps.length);
   }
-
 Future<void> _onSubmit() async {
     await _saveProgress(_steps.length);
 
