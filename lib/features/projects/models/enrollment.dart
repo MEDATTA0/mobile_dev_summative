@@ -3,6 +3,7 @@ import 'package:mobile_dev_summative/features/projects/models/enrollment_status.
 
 class Enrollment extends BaseModel {
   final String projectId;
+  final String projectTitle;
   final String userId;
   final EnrollmentStatus status;
   final int completedSteps;
@@ -14,6 +15,7 @@ class Enrollment extends BaseModel {
     required super.createdAt,
     required super.updatedAt,
     required this.projectId,
+    required this.projectTitle,
     required this.userId,
     required this.status,
     required this.completedSteps,
@@ -29,6 +31,7 @@ class Enrollment extends BaseModel {
       createdAt: DateTime.parse(map["createdAt"]),
       updatedAt: DateTime.parse(map["updatedAt"]),
       projectId: map["projectId"],
+      projectTitle: map["projectTitle"] ?? "",
       userId: map["userId"],
       status: EnrollmentStatus.values.byName(map["status"]),
       completedSteps: map["completedSteps"] ?? 0,
@@ -44,6 +47,7 @@ class Enrollment extends BaseModel {
       "createdAt": createdAt.toIso8601String(),
       "updatedAt": updatedAt.toIso8601String(),
       "projectId": projectId,
+      "projectTitle": projectTitle,
       "userId": userId,
       "status": status.name,
       "completedSteps": completedSteps,
