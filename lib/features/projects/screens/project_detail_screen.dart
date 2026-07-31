@@ -68,6 +68,25 @@ class ProjectDetailScreen extends ConsumerWidget {
               if (enrollment != null) ...[
                 const SizedBox(height: 16),
                 ProjectProgressBar(value: enrollment.progress),
+                if (enrollment.submissionUrl != null &&
+                    enrollment.submissionUrl!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.link, size: 16, color: Colors.indigo),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          'Submitted: ${enrollment.submissionUrl}',
+                          style: textTheme.bodySmall?.copyWith(
+                            color: Colors.grey.shade700,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
               const SizedBox(height: 16),
               Text(project.description, style: textTheme.bodyMedium),
