@@ -1,30 +1,62 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mobile_dev_summative/features/jobs/models/job_application.dart';
+import 'package:mobile_dev_summative/features/jobs/models/job_posting.dart';
+import 'package:mobile_dev_summative/features/jobs/models/job_status.dart';
+import 'package:mobile_dev_summative/features/jobs/domain/repositories/job_application_repository.dart';
+import 'package:mobile_dev_summative/features/jobs/domain/repositories/job_posting_repository.dart';
+import 'package:mobile_dev_summative/features/jobs/job_postings_providers.dart';
+import 'package:mobile_dev_summative/features/jobs/jobs_providers.dart';
 
 import 'package:mobile_dev_summative/main.dart';
 
+class FakeJobApplicationRepository implements JobApplicationRepository {
+  @override
+  Future<String> apply(JobApplication job) async => 'fake-id';
+
+  @override
+  Future<List<JobApplication>> getAll() async => [];
+
+  @override
+  Future<JobApplication?> getById(String id) async => null;
+
+  @override
+  Future<void> updateStatus(String id, JobStatus status) async {}
+
+  @override
+  Future<void> withdraw(String id) async {}
+}
+
+class FakeJobPostingRepository implements JobPostingRepository {
+  @override
+  Future<List<JobPosting>> getAll() async => [];
+
+  @override
+  Future<JobPosting?> getById(String id) async => null;
+}
+
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('shows the empty state when there are no job postings', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          jobApplicationRepositoryProvider.overrideWithValue(
+            FakeJobApplicationRepository(),
+          ),
+          jobPostingRepositoryProvider.overrideWithValue(
+            FakeJobPostingRepository(),
+          ),
+        ],
+        child: const MyApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.tap(find.text('Jobs'));
+    await tester.pumpAndSettle();
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('No job postings yet'), findsOneWidget);
   });
 }
