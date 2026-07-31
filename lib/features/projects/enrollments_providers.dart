@@ -3,12 +3,13 @@ import 'package:mobile_dev_summative/features/projects/data/repositories/enrollm
 import 'package:mobile_dev_summative/features/projects/domain/repositories/enrollment_repository.dart';
 import 'package:mobile_dev_summative/features/projects/models/enrollment.dart';
 
+// TODO: replace with the real authenticated uid from Member 1's auth provider
+const kCurrentUserId = 'demo-user';
+
 final enrollmentRepositoryProvider = Provider<EnrollmentRepository>((ref) {
   return EnrollmentRepositoryImpl();
 });
 
 final enrollmentsProvider = FutureProvider<List<Enrollment>>((ref) {
-  // TODO: replace with the real authenticated uid from the auth provider
-  const userId = 'demo-user';
-  return ref.watch(enrollmentRepositoryProvider).getAllForUser(userId);
+  return ref.watch(enrollmentRepositoryProvider).getAllForUser(kCurrentUserId);
 });
