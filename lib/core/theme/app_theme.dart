@@ -47,17 +47,46 @@ class AppTheme {
 
     return base.copyWith(
       textTheme: textTheme,
-      scaffoldBackgroundColor: colorScheme.surface,
+      scaffoldBackgroundColor:
+          isLight ? AppColors.background : colorScheme.surface,
       appBarTheme: AppBarTheme(
-        backgroundColor: colorScheme.surface,
+        backgroundColor: isLight ? AppColors.surface : colorScheme.surface,
         foregroundColor: colorScheme.onSurface,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         titleTextStyle: textTheme.titleLarge?.copyWith(
           color: colorScheme.onSurface,
         ),
       ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
       navigationBarTheme: NavigationBarThemeData(
-        indicatorColor: colorScheme.secondary.withValues(alpha: 0.25),
-        labelTextStyle: WidgetStateProperty.all(textTheme.labelMedium),
+        backgroundColor: isLight ? AppColors.surface : colorScheme.surface,
+        indicatorColor: AppColors.primaryLight,
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => textTheme.labelMedium?.copyWith(
+            color: states.contains(WidgetState.selected)
+                ? AppColors.primary
+                : AppColors.textSecondary,
+            fontWeight: states.contains(WidgetState.selected)
+                ? FontWeight.w600
+                : FontWeight.w500,
+          ),
+        ),
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            color: states.contains(WidgetState.selected)
+                ? AppColors.primary
+                : AppColors.textSecondary,
+          ),
+        ),
       ),
     );
   }
