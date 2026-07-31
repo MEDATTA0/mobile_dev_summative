@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_dev_summative/features/profile/domain/entities/profile.dart';
+import 'package:mobile_dev_summative/features/profile/presentation/screens/profile_edit_screen.dart';
 import 'package:mobile_dev_summative/features/profile/profile_providers.dart';
+import 'package:mobile_dev_summative/features/settings/screens/settings_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -9,9 +11,38 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(currentProfileProvider);
+    final profile = profileAsync.value;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(
+        title: const Text('Profile'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Settings',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            ),
+          ),
+          if (profile != null)
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              tooltip: 'Delete profile',
+              onPressed: () => _confirmDelete(context, ref, profile.uid),
+            ),
+        ],
+      ),
+      floatingActionButton: profileAsync.hasValue
+          ? FloatingActionButton.extended(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => ProfileEditScreen(existing: profile),
+                ),
+              ),
+              icon: Icon(profile == null ? Icons.person_add : Icons.edit),
+              label: Text(profile == null ? 'Create' : 'Edit'),
+            )
+          : null,
       body: profileAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => _ProfileMessage(
@@ -24,12 +55,44 @@ class ProfileScreen extends ConsumerWidget {
             return const _ProfileMessage(
               icon: Icons.person_outline,
               title: 'No profile yet',
-              subtitle: 'Create your profile to get started.',
+              subtitle: 'Tap Create to set up your profile.',
             );
           }
           return _ProfileView(profile: profile);
         },
       ),
+    );
+  }
+
+  Future<void> _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    String uid,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete profile?'),
+        content: const Text('This permanently removes your profile.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final ok = await ref.read(profileControllerProvider.notifier).delete(uid);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(ok ? 'Profile deleted.' : 'Could not delete.')),
     );
   }
 }
