@@ -38,6 +38,21 @@ class EnrollmentRepositoryImpl extends BaseRepository<Enrollment>
   }
 
   @override
+  Future<void> submitWork(String id, String submissionUrl) async {
+    final current = await findById(id);
+    if (current == null) {
+      throw StateError('Enrollment $id not found');
+    }
+    await update(
+      _copyWith(
+        current,
+        status: EnrollmentStatus.submitted,
+        submissionUrl: submissionUrl,
+      ),
+    );
+  }
+
+  @override
   Future<List<Enrollment>> getAllForUser(String userId) async {
     final all = await findAll();
     return all.where((enrollment) => enrollment.userId == userId).toList();
@@ -66,6 +81,7 @@ class EnrollmentRepositoryImpl extends BaseRepository<Enrollment>
       totalSteps: current.totalSteps,
       submissionUrl: submissionUrl ?? current.submissionUrl, 
       enrolledAt: current.enrolledAt,
+      
     );
   }
 }

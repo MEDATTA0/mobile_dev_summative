@@ -8,4 +8,5 @@ abstract class EnrollmentRepository {
   Future<void> updateStatus(String id, EnrollmentStatus status);
   Future<List<Enrollment>> getAllForUser(String userId);
   Future<Enrollment?> getById(String id);
+  Future<void> submitWork(String id, String submissionUrl); 
 }
