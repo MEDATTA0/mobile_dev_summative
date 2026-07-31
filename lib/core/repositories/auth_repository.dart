@@ -54,7 +54,14 @@ class AuthRepository {
   }
 
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
+    // Google sign-out is best-effort: it can throw when the user signed in with
+    // email/password or on platforms without Google Sign-In. Never let it block
+    // the Firebase sign-out that actually clears the auth state.
+    try {
+      await _googleSignIn.signOut();
+    } catch (_) {
+      // Ignored: fall through to Firebase sign-out regardless.
+    }
     await _firebaseAuth.signOut();
   }
 }
