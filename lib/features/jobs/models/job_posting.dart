@@ -2,6 +2,7 @@ import 'package:mobile_dev_summative/core/models/base_model.dart';
 import 'package:mobile_dev_summative/features/jobs/models/employment_type.dart';
 
 class JobPosting extends BaseModel {
+  final String userId;
   final String title;
   final String company;
   final EmploymentType employmentType;
@@ -13,6 +14,7 @@ class JobPosting extends BaseModel {
     required super.id,
     required super.createdAt,
     required super.updatedAt,
+    required this.userId,
     required this.title,
     required this.company,
     required this.employmentType,
@@ -26,6 +28,7 @@ class JobPosting extends BaseModel {
       id: map["id"],
       createdAt: DateTime.parse(map["createdAt"]),
       updatedAt: DateTime.parse(map["updatedAt"]),
+      userId: map["userId"],
       title: map["title"],
       company: map["company"],
       employmentType: EmploymentType.values.byName(map["employmentType"]),
@@ -41,6 +44,7 @@ class JobPosting extends BaseModel {
       "id": id,
       "createdAt": createdAt.toIso8601String(),
       "updatedAt": updatedAt.toIso8601String(),
+      "userId": userId,
       "title": title,
       "company": company,
       "employmentType": employmentType.name,

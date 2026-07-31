@@ -27,13 +27,15 @@ class JobApplicationRepositoryImpl extends BaseRepository<JobApplication>
       id: current.id,
       createdAt: current.createdAt,
       updatedAt: DateTime.now(),
+      userId: current.userId,
+      jobPostingId: current.jobPostingId,
       company: current.company,
       position: current.position,
       location: current.location,
       status: status,
       appliedDate: current.appliedDate,
-      jobUrl: current.jobUrl,
-      notes: current.notes,
+      cvUrl: current.cvUrl,
+      coverLetter: current.coverLetter,
     );
     await update(updated);
   }
@@ -46,5 +48,13 @@ class JobApplicationRepositoryImpl extends BaseRepository<JobApplication>
   @override
   Future<JobApplication?> getById(String id) {
     return findById(id);
+  }
+
+  @override
+  Future<List<JobApplication>> getByJobPostingId(String jobPostingId) async {
+    final snapshot = await collectionRef
+        .where('jobPostingId', isEqualTo: jobPostingId)
+        .get();
+    return snapshot.docs.map((doc) => doc.data()).toList();
   }
 }

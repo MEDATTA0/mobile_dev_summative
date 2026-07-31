@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mobile_dev_summative/core/repositories/auth_repository.dart';
 import 'package:mobile_dev_summative/features/jobs/models/job_application.dart';
 import 'package:mobile_dev_summative/features/jobs/models/job_posting.dart';
 import 'package:mobile_dev_summative/features/jobs/models/job_status.dart';
@@ -42,6 +44,10 @@ class FakePostReplyRepository implements PostReplyRepository {
 
   @override
   Future<void> deleteReply(String id) async {}
+
+class FakeUser extends Fake implements User {
+  @override
+  String get uid => 'test-uid';
 }
 
 class FakeJobApplicationRepository implements JobApplicationRepository {
@@ -59,9 +65,16 @@ class FakeJobApplicationRepository implements JobApplicationRepository {
 
   @override
   Future<void> withdraw(String id) async {}
+
+  @override
+  Future<List<JobApplication>> getByJobPostingId(String jobPostingId) async =>
+      [];
 }
 
 class FakeJobPostingRepository implements JobPostingRepository {
+  @override
+  Future<String> create(JobPosting posting) async => 'fake-id';
+
   @override
   Future<List<JobPosting>> getAll() async => [];
 
@@ -76,6 +89,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          authStateChangesProvider.overrideWith(
+            (ref) => Stream.value(FakeUser()),
+          ),
           jobApplicationRepositoryProvider.overrideWithValue(
             FakeJobApplicationRepository(),
           ),

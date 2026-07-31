@@ -1,0 +1,1 @@
+enum EnrollmentStatus { notStarted, inProgress, submitted, completed }

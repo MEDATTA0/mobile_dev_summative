@@ -32,3 +32,7 @@ final currentUserModelProvider = FutureProvider<UserModel?>((ref) async {
   if (uid == null) return null;
   return ref.watch(userRepositoryProvider).findById(uid);
 });
+
+final userByIdProvider = FutureProvider.family<UserModel?, String>((ref, id) {
+  return ref.watch(userRepositoryProvider).findById(id);
+});

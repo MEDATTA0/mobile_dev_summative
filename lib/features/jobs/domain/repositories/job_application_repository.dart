@@ -7,4 +7,5 @@ abstract class JobApplicationRepository {
   Future<void> updateStatus(String id, JobStatus status);
   Future<List<JobApplication>> getAll();
   Future<JobApplication?> getById(String id);
+  Future<List<JobApplication>> getByJobPostingId(String jobPostingId);
 }

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_dev_summative/features/jobs/models/job_application.dart';
+import 'package:mobile_dev_summative/core/repositories/auth_repository.dart';
 import 'package:mobile_dev_summative/features/jobs/models/job_posting.dart';
-import 'package:mobile_dev_summative/features/jobs/models/job_status.dart';
-import 'package:mobile_dev_summative/features/jobs/jobs_providers.dart';
+import 'package:mobile_dev_summative/features/jobs/screens/job_applicants_screen.dart';
+import 'package:mobile_dev_summative/features/jobs/screens/job_application_form_screen.dart';
 import 'package:mobile_dev_summative/features/jobs/screens/widgets/job_posting_widgets.dart';
 
 class JobPostingDetailScreen extends ConsumerWidget {
@@ -14,6 +14,8 @@ class JobPostingDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
+    final currentUserId = ref.watch(authRepositoryProvider).currentUser?.uid;
+    final isOwner = currentUserId != null && currentUserId == posting.userId;
 
     return Scaffold(
       appBar: AppBar(title: Text(posting.title)),
@@ -78,44 +80,21 @@ class JobPostingDetailScreen extends ConsumerWidget {
           child: SizedBox(
             width: double.infinity,
             child: FilledButton(
-              onPressed: () => _apply(context, ref),
-              child: const Text('Apply'),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => isOwner
+                        ? JobApplicantsScreen(posting: posting)
+                        : JobApplicationFormScreen(posting: posting),
+                  ),
+                );
+              },
+              child: Text(isOwner ? 'View applicants' : 'Apply'),
             ),
           ),
         ),
       ),
     );
-  }
-
-  Future<void> _apply(BuildContext context, WidgetRef ref) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final navigator = Navigator.of(context);
-    try {
-      final now = DateTime.now();
-      final application = JobApplication(
-        id: '',
-        createdAt: now,
-        updatedAt: now,
-        company: posting.company,
-        position: posting.title,
-        location: posting.location,
-        status: JobStatus.applied,
-        appliedDate: now,
-      );
-      await ref.read(jobApplicationRepositoryProvider).apply(application);
-      if (!context.mounted) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('Applied to ${posting.title} at ${posting.company}'),
-        ),
-      );
-      navigator.pop();
-    } catch (e) {
-      if (!context.mounted) return;
-      messenger.showSnackBar(
-        SnackBar(content: Text('Failed to apply: $e')),
-      );
-    }
   }
 
   String _formatDate(DateTime date) {
