@@ -21,10 +21,13 @@ class ProjectSandboxScreen extends ConsumerStatefulWidget {
 class _ProjectSandboxScreenState extends ConsumerState<ProjectSandboxScreen> {
   int _currentStep = 0;
   final _linkController = TextEditingController();
+  final Set<int> _confirmedSteps = {};
 
   List<ProjectStep> get _steps => widget.project.steps;
 
   bool get _isLastStep => _currentStep == _steps.length - 1;
+
+  bool get _currentStepConfirmed => _confirmedSteps.contains(_currentStep);
 
   Future<void> _saveProgress(int completedSteps) async {
     final messenger = ScaffoldMessenger.of(context);
@@ -142,7 +145,9 @@ Future<void> _onSubmit() async {
         child: Stepper(
           currentStep: _currentStep,
           onStepTapped: (step) => setState(() => _currentStep = step),
-          onStepContinue: !_currentStepConfirmed ? null: (_isLastStep ? _onSubmit : _onContinue)
+          onStepContinue: !_currentStepConfirmed
+              ? null
+              : (_isLastStep ? _onSubmit : _onContinue),
           onStepCancel: _currentStep == 0
               ? null
               : () => setState(() => _currentStep -= 1),
