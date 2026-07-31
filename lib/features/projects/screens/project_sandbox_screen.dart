@@ -143,7 +143,7 @@ Future<void> _onSubmit() async {
         child: Stepper(
           currentStep: _currentStep,
           onStepTapped: (step) => setState(() => _currentStep = step),
-          onStepContinue: _isLastStep ? _onSubmit : _onContinue,
+          onStepContinue: !_currentStepConfirmed ? null: (_isLastStep ? _onSubmit : _onContinue)
           onStepCancel: _currentStep == 0
               ? null
               : () => setState(() => _currentStep -= 1),
@@ -170,9 +170,30 @@ Future<void> _onSubmit() async {
             for (var i = 0; i < _steps.length; i++)
               Step(
                 title: Text(_steps[i].title),
-                content: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(_steps[i].detail),
+                content: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(_steps[i].detail),
+                    ),
+                    const SizedBox(height: 8),
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      title: const Text('I completed this step'),
+                      value: _confirmedSteps.contains(i),
+                      onChanged: (checked) {
+                        setState(() {
+                          if (checked == true) {
+                            _confirmedSteps.add(i);
+                          } else {
+                            _confirmedSteps.remove(i);
+                          }
+                        });
+                      },
+                    ),
+                  ],
                 ),
                 isActive: i <= _currentStep,
               ),
