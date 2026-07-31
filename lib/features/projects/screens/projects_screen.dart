@@ -1,10 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile_dev_summative/features/projects/enrollments_providers.dart';
+import 'package:mobile_dev_summative/features/projects/models/enrollment.dart';
+import 'package:mobile_dev_summative/features/projects/models/enrollment_status.dart';
 import 'package:mobile_dev_summative/features/projects/models/project.dart';
 import 'package:mobile_dev_summative/features/projects/models/project_level.dart';
 import 'package:mobile_dev_summative/features/projects/projects_providers.dart';
 import 'package:mobile_dev_summative/features/projects/screens/project_detail_screen.dart';
 import 'package:mobile_dev_summative/features/projects/screens/widgets/project_widgets.dart';
+
+EnrollmentStatus? _statusFor(Project project, List<Enrollment> enrollments) {
+  for (final enrollment in enrollments) {
+    if (enrollment.projectId == project.id) return enrollment.status;
+  }
+  return null;
+}
+
+// A project is locked until the previous project in its level has been
+// started, so each level unlocks sequentially while Beginner stays open.
+Set<String> _lockedProjectIds(
+  List<Project> projects,
+  List<Enrollment> enrollments,
+) {
+  final byLevel = <ProjectLevel, List<Project>>{};
+  for (final project in projects) {
+    byLevel.putIfAbsent(project.level, () => []).add(project);
+  }
+
+  final locked = <String>{};
+  for (final levelProjects in byLevel.values) {
+    for (var i = 1; i < levelProjects.length; i++) {
+      final previous = levelProjects[i - 1];
+      final previousStarted = enrollments.any(
+        (e) => e.projectId == previous.id,
+      );
+      if (!previousStarted) locked.add(levelProjects[i].id);
+    }
+  }
+  return locked;
+}
 
 class ProjectsScreen extends ConsumerStatefulWidget {
   const ProjectsScreen({super.key});
@@ -20,6 +54,10 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final projectsAsync = ref.watch(projectsProvider);
+    final enrollments = ref.watch(enrollmentsProvider).maybeWhen(
+      data: (e) => e,
+      orElse: () => const <Enrollment>[],
+    );
 
     return Scaffold(
       body: SafeArea(
@@ -28,7 +66,12 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-              child: Text('Projects', style: textTheme.headlineSmall),
+              child: Text(
+                'Projects',
+                style: textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
             _LevelFilterBar(
               selected: _selectedLevel,
@@ -44,6 +87,8 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                       onRetry: () => ref.invalidate(projectsProvider),
                     );
                   }
+
+                  final lockedIds = _lockedProjectIds(projects, enrollments);
 
                   final filtered = _selectedLevel == null
                       ? projects
@@ -66,7 +111,12 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                       separatorBuilder: (context, index) =>
                           const SizedBox(height: 16),
                       itemBuilder: (context, index) {
-                        return _ProjectCard(project: filtered[index]);
+                        final project = filtered[index];
+                        return _ProjectCard(
+                          project: project,
+                          status: _statusFor(project, enrollments),
+                          locked: lockedIds.contains(project.id),
+                        );
                       },
                     ),
                   );
@@ -132,18 +182,38 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
     return ChoiceChip(
       label: Text(label),
       selected: isSelected,
       onSelected: (_) => onTap(),
+      showCheckmark: false,
+      shape: StadiumBorder(
+        side: BorderSide(
+          color: isSelected ? Colors.transparent : Colors.grey.shade300,
+        ),
+      ),
+      backgroundColor: Colors.white,
+      selectedColor: primary,
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.white : Colors.black87,
+        fontWeight: FontWeight.w600,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
     );
   }
 }
 
 class _ProjectCard extends StatelessWidget {
-  const _ProjectCard({required this.project});
+  const _ProjectCard({
+    required this.project,
+    required this.status,
+    required this.locked,
+  });
 
   final Project project;
+  final EnrollmentStatus? status;
+  final bool locked;
 
   @override
   Widget build(BuildContext context) {
@@ -151,13 +221,15 @@ class _ProjectCard extends StatelessWidget {
 
     return InkWell(
       borderRadius: BorderRadius.circular(16),
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => ProjectDetailScreen(project: project),
-          ),
-        );
-      },
+      onTap: locked
+          ? null
+          : () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => ProjectDetailScreen(project: project),
+                ),
+              );
+            },
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -174,29 +246,16 @@ class _ProjectCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                const ProjectIcon(),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(project.title, style: textTheme.titleMedium),
-                      const SizedBox(height: 2),
-                      Text(
-                        project.subtitle,
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
             ProjectLevelBadge(level: project.level),
+            const SizedBox(height: 10),
+            Text(
+              project.title,
+              style: textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            ProjectStatusLine(status: status, locked: locked),
           ],
         ),
       ),
