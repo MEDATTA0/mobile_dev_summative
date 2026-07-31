@@ -10,7 +10,40 @@ import 'package:mobile_dev_summative/features/jobs/domain/repositories/job_posti
 import 'package:mobile_dev_summative/features/jobs/job_postings_providers.dart';
 import 'package:mobile_dev_summative/features/jobs/jobs_providers.dart';
 
+import 'package:mobile_dev_summative/features/community/community_providers.dart';
+import 'package:mobile_dev_summative/features/community/domain/repositories/community_post_repository.dart';
+import 'package:mobile_dev_summative/features/community/domain/repositories/post_reply_repository.dart';
+import 'package:mobile_dev_summative/features/community/models/community_post.dart';
+import 'package:mobile_dev_summative/features/community/models/post_reply.dart';
+
 import 'package:mobile_dev_summative/main.dart';
+
+class FakeCommunityPostRepository implements CommunityPostRepository {
+  @override
+  Stream<List<CommunityPost>> watchAll() => Stream.value(const []);
+
+  @override
+  Stream<CommunityPost?> watchById(String id) => Stream.value(null);
+
+  @override
+  Future<String> createPost(CommunityPost post) async => 'fake-id';
+
+  @override
+  Future<void> updatePost(CommunityPost post) async {}
+
+  @override
+  Future<void> deletePost(String id) async {}
+}
+
+class FakePostReplyRepository implements PostReplyRepository {
+  @override
+  Stream<List<PostReply>> watchForPost(String postId) => Stream.value(const []);
+
+  @override
+  Future<String> createReply(PostReply reply) async => 'fake-id';
+
+  @override
+  Future<void> deleteReply(String id) async {}
 
 class FakeUser extends Fake implements User {
   @override
@@ -64,6 +97,12 @@ void main() {
           ),
           jobPostingRepositoryProvider.overrideWithValue(
             FakeJobPostingRepository(),
+          ),
+          communityPostRepositoryProvider.overrideWithValue(
+            FakeCommunityPostRepository(),
+          ),
+          postReplyRepositoryProvider.overrideWithValue(
+            FakePostReplyRepository(),
           ),
         ],
         child: const MyApp(),
