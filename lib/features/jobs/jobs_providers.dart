@@ -12,3 +12,12 @@ final jobApplicationRepositoryProvider = Provider<JobApplicationRepository>((
 final jobApplicationsProvider = FutureProvider<List<JobApplication>>((ref) {
   return ref.watch(jobApplicationRepositoryProvider).getAll();
 });
+
+final jobApplicantsProvider = FutureProvider.family<List<JobApplication>, String>((
+  ref,
+  jobPostingId,
+) {
+  return ref
+      .watch(jobApplicationRepositoryProvider)
+      .getByJobPostingId(jobPostingId);
+});
