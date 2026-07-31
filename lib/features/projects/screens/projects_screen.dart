@@ -38,34 +38,45 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
             Expanded(
               child: projectsAsync.when(
                 data: (projects) {
+                  if (projects.isEmpty) {
+                    return _RetryView(
+                      message: 'No projects yet',
+                      onRetry: () => ref.invalidate(projectsProvider),
+                    );
+                  }
+
                   final filtered = _selectedLevel == null
                       ? projects
                       : projects
                             .where((project) => project.level == _selectedLevel)
                             .toList();
 
-                  if (projects.isEmpty) {
-                    return const Center(child: Text('No projects yet'));
-                  }
                   if (filtered.isEmpty) {
                     return const Center(
                       child: Text('No projects at this level yet'),
                     );
                   }
 
-                  return ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                    itemCount: filtered.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 16),
-                    itemBuilder: (context, index) {
-                      return _ProjectCard(project: filtered[index]);
-                    },
+                  return RefreshIndicator(
+                    onRefresh: () => ref.refresh(projectsProvider.future),
+                    child: ListView.separated(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                      itemCount: filtered.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 16),
+                      itemBuilder: (context, index) {
+                        return _ProjectCard(project: filtered[index]);
+                      },
+                    ),
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stackTrace) =>
-                    Center(child: Text('Failed to load projects: $error')),
+                error: (error, stackTrace) => _RetryView(
+                  message: 'Failed to load projects',
+                  detail: '$error',
+                  onRetry: () => ref.invalidate(projectsProvider),
+                ),
               ),
             ),
           ],
@@ -185,13 +196,42 @@ class _ProjectCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-            Row(
-              children: [
-                ProjectLevelBadge(level: project.level),
-              ],
-            ),
+            ProjectLevelBadge(level: project.level),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _RetryView extends StatelessWidget {
+  const _RetryView({required this.message, this.detail, required this.onRetry});
+
+  final String message;
+  final String? detail;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(message, style: Theme.of(context).textTheme.titleMedium),
+          if (detail != null) ...[
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Text(
+                detail!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          OutlinedButton(onPressed: onRetry, child: const Text('Retry')),
+        ],
       ),
     );
   }
