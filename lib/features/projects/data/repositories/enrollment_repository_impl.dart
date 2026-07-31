@@ -52,6 +52,7 @@ class EnrollmentRepositoryImpl extends BaseRepository<Enrollment>
     Enrollment current, {
     int? completedSteps,
     EnrollmentStatus? status,
+    String? submissionUrl,
   }) {
     return Enrollment(
       id: current.id,
@@ -63,6 +64,7 @@ class EnrollmentRepositoryImpl extends BaseRepository<Enrollment>
       status: status ?? current.status,
       completedSteps: completedSteps ?? current.completedSteps,
       totalSteps: current.totalSteps,
+      submissionUrl: submissionUrl ?? current.submissionUrl, 
       enrolledAt: current.enrolledAt,
     );
   }
